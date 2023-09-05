@@ -1,0 +1,26 @@
+[package]
+name = "web_prod"
+version = "0.1.0"
+edition = "2021"
+
+
+# ライブラリは再利用可能なコードをまとめたもの
+[lib]
+path = "src/lib.rs"
+
+
+# バイナリはlib.rsを参照しつつ実行可能なファイルを作る
+# main.rsに含まれる関数は他のモジュールから呼び出せないのでテストができない。
+# そのため、lib.rsに関数を書いて、main.rsから呼び出すようにする。
+[[bin]]
+path = "src/main.rs"
+name = "web_prod"
+
+
+[dependencies]
+actix-web = "4"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+
+[dev-dependencies]
+reqwest = "0.11"
