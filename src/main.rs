@@ -1,5 +1,5 @@
 use std::net::TcpListener;
-use web_prod::run;
+use web_prod::startup::run;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {

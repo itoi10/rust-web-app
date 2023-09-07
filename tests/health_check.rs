@@ -1,5 +1,5 @@
 use std::net::TcpListener;
-use web_prod::run;
+use web_prod::startup::run;
 
 // Webサーバーを起動して、そのアドレスを返す
 fn spawn_app() -> String {
