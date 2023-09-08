@@ -1,4 +1,6 @@
+use sqlx::{Connection, PgConnection};
 use std::net::TcpListener;
+use web_prod::configuration::get_configuration;
 use web_prod::startup::run;
 
 // Webサーバーを起動して、そのアドレスを返す
@@ -40,7 +42,16 @@ async fn health_check_works() {
 #[tokio::test]
 async fn subscribe_returns_a_200_for_valid_form_data() {
     // Arrange
+    // Webサーバーを起動
     let app_address = spawn_app();
+    // 設定ファイルを読み込む
+    let configuration = get_configuration().expect("Failed to read configuration");
+    let connection_string = configuration.database.connection_string();
+    // Postgresに接続
+    let connection = PgConnection::connect(&connection_string)
+        .await
+        .expect("Failed to connect to Postgres.");
+    // HTTPクライアント
     let client = reqwest::Client::new();
 
     // Act

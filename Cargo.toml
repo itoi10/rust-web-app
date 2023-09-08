@@ -22,7 +22,7 @@ actix-web = "4"
 # serdeはシリアライズ/デシリアライズを行うライブラリ。derievは構造体の前にマクロをつけられるようにする
 serde = { version = "1.0.188", features = ["derive"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-
+config = "0.13"
 
 [dev-dependencies]
 reqwest = "0.11"
