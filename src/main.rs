@@ -1,3 +1,4 @@
+use env_logger::Env;
 use sqlx::PgPool;
 use std::net::TcpListener;
 use web_prod::configuration::get_configuration;
@@ -5,6 +6,10 @@ use web_prod::startup::run;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
+    // ログ出力を有効にする
+    // デフォルトのログレベルはinfoで、RUST_LOG環境変数で変更できる
+    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+
     // 設定ファイルを読み込む
     let configuration = get_configuration().expect("Failed to read configuration.");
     // Postgresに接続 (PgConnectionは単一のデータベース接続だが、PgPoolはコネクションプール)

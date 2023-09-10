@@ -25,6 +25,7 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 config = "0.13"
 chrono = "0.4.30"
 uuid = { version = "1.4.1", features = ["v4"] }
+env_logger = "0.10.0"
 
 [dev-dependencies]
 reqwest = "0.11"
