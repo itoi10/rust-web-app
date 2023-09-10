@@ -23,6 +23,8 @@ actix-web = "4"
 serde = { version = "1.0.188", features = ["derive"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 config = "0.13"
+chrono = "0.4.30"
+uuid = { version = "1.4.1", features = ["v4"] }
 
 [dev-dependencies]
 reqwest = "0.11"

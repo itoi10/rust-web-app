@@ -16,16 +16,24 @@ pub struct DatabaseSettings {
     pub database_name: String,
 }
 
-// PostgreSQLの接続文字列を返す
 impl DatabaseSettings {
+    /// PostgreSQLの接続文字列を返す
     pub fn connection_string(&self) -> String {
         format!(
             "postgres://{}:{}@{}:{}/{}",
             self.username, self.password, self.host, self.port, self.database_name
         )
     }
+    /// PostgreSQLの接続文字列をDB名なしで返す
+    pub fn connection_string_without_db(&self) -> String {
+        format!(
+            "postgres://{}:{}@{}:{}",
+            self.username, self.password, self.host, self.port
+        )
+    }
 }
 
+/// 設定ファイルを読み込む
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
     // configuration.yamlファイルから設定を読み込む
     let settings = config::Config::builder()
