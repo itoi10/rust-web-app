@@ -1,3 +1,5 @@
+use secrecy::{ExposeSecret, Secret};
+
 // 構造体やメンバにpubを付けることで他のモジュールからもアクセスできるようになる
 #[derive(serde::Deserialize)]
 pub struct Settings {
@@ -10,7 +12,8 @@ pub struct Settings {
 #[derive(serde::Deserialize)]
 pub struct DatabaseSettings {
     pub username: String,
-    pub password: String,
+    // Secretから値を取り出すにはexpose_secret()を使う。誤ってログに出力しないようにするため
+    pub password: Secret<String>,
     pub port: u16,
     pub host: String,
     pub database_name: String,
@@ -18,18 +21,25 @@ pub struct DatabaseSettings {
 
 impl DatabaseSettings {
     /// PostgreSQLの接続文字列を返す
-    pub fn connection_string(&self) -> String {
-        format!(
+    pub fn connection_string(&self) -> Secret<String> {
+        Secret::new(format!(
             "postgres://{}:{}@{}:{}/{}",
-            self.username, self.password, self.host, self.port, self.database_name
-        )
+            self.username,
+            self.password.expose_secret(),
+            self.host,
+            self.port,
+            self.database_name
+        ))
     }
     /// PostgreSQLの接続文字列をDB名なしで返す
-    pub fn connection_string_without_db(&self) -> String {
-        format!(
+    pub fn connection_string_without_db(&self) -> Secret<String> {
+        Secret::new(format!(
             "postgres://{}:{}@{}:{}",
-            self.username, self.password, self.host, self.port
-        )
+            self.username,
+            self.password.expose_secret(),
+            self.host,
+            self.port
+        ))
     }
 }
 
