@@ -1,0 +1,28 @@
+# セキュリティ監査を実行するワークフロー
+name: Security audit
+
+on:
+  # 毎日UTC 0:00に実行
+  schedule:
+    - cron: '0 0 * * *'
+  # Cargo.tomlまたはCargo.lockが変更されたときにも実行
+  push:
+    branches:
+      - main
+    paths:
+      - '**/Cargo.toml'
+      - '**/Cargo.lock'
+
+jobs:
+  # ジョブの名前
+  security_audit:
+    # ジョブは最新のUbuntuで実行
+    runs-on: ubuntu-latest
+    steps:
+      # リポジトリをチェックアウト
+      - uses: actions/checkout@v3
+      # cargo-denyをインストール (Rustの脆弱性監査ツール)
+      - uses: taiki-e/install-action@cargo-deny
+      # cargo-denyを実行
+      - name: Scan for vulnerabilities
+        run: cargo deny check advisories
