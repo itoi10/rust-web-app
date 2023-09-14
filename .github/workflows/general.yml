@@ -1,0 +1,162 @@
+name: Rust
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    # プルリクが新規作成、既存のプルリクにコミットがプッシュ、再オープンされたときに実行
+    types: [ opened, synchronize, reopened ]
+    branches:
+      - main
+
+# 環境変数
+env:
+  # cargoの出力をカラー表示
+  CARGO_TERM_COLOR: always
+  # sqlxのバージョン指定
+  SQLX_VERSION: 0.7.1
+  # sqlxの機能指定
+  SQLX_FEATURES: "rustls,postgres"
+
+jobs:
+  # テストを実行するジョブ
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    # PostgreSQLのサービスを起動
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+    steps:
+      # ソースコードをチェックアウト
+      - uses: actions/checkout@v3
+      # Rustのツールチェーンをセットアップ
+      - uses: dtolnay/rust-toolchain@stable
+      # Rustの依存関係をキャッシュ
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: sqlx-${{ env.SQLX_VERSION }}
+      # sqlx-cliをインストール
+      - name: Install sqlx-cli
+        run:
+            cargo install sqlx-cli
+            --version=${{ env.SQLX_VERSION }}
+            --features ${{ env.SQLX_FEATURES }}
+            --no-default-features
+            --locked
+      # データベースをマイグレーション
+      - name: Migrate database
+        run: |
+          sudo apt-get install libpq-dev -y
+          SKIP_DOCKER=true ./scripts/init_db.sh
+      # テストを実行
+      - name: Run tests
+        run: cargo test
+
+  # フォーマットをチェックするジョブ
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      # ソースコードをチェックアウト
+      - uses: actions/checkout@v3
+      # Rustのツールチェーンをセットアップ(rustfmtもインストール)
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      # フォーマットをチェック
+      - name: Enforce formatting
+        run: cargo fmt --check
+
+  # リントを実行するジョブ
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    # PostgreSQLのサービスを起動
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v3
+      # Rustのツールチェーンをセットアップ(clippyもインストール)
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      # Rustの依存関係をキャッシュ
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: sqlx-${{ env.SQLX_VERSION }}
+      # sqlx-cliをインストール
+      - name: Install sqlx-cli
+        run:
+          cargo install sqlx-cli
+            --version=${{ env.SQLX_VERSION }}
+            --features ${{ env.SQLX_FEATURES }}
+            --no-default-features
+            --locked
+      # データベースをマイグレーション
+      - name: Migrate database
+        run: |
+          sudo apt-get install libpq-dev -y
+          SKIP_DOCKER=true ./scripts/init_db.sh
+      # リントを実行
+      - name: Linting
+        run: cargo clippy -- -D warnings
+
+  # コードカバレッジを計測するジョブ
+  coverage:
+    name: Code coverage
+    runs-on: ubuntu-latest
+    # PostgreSQLのサービスを起動
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+    steps:
+      # ソースコードをチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      # Rustのツールチェーンをセットアップ
+      - uses: dtolnay/rust-toolchain@stable
+      # libpqをインストール
+      - name: Install libpq
+        run: sudo apt-get update && sudo apt-get install postgresql-client -y
+      # Rustの依存関係をキャッシュ
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: sqlx-${{ env.SQLX_VERSION }}
+      # cargo-tarpaulinをインストール
+      - name: Install tarpaulin
+        run: cargo install cargo-tarpaulin
+      # sqlx-cliをインストール
+      - name: Install sqlx-cli
+        run:
+          cargo install sqlx-cli
+          --version=${{ env.SQLX_VERSION }}
+          --features ${{ env.SQLX_FEATURES }}
+          --no-default-features
+          --locked
+      # データベースをマイグレーション
+      - name: Migrate database
+        run: SKIP_DOCKER=true ./scripts/init_db.sh
+      # コードカバレッジを計測
+      - name: Generate code coverage
+        run: cargo tarpaulin --verbose --workspace
