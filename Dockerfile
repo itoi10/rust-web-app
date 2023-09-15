@@ -12,4 +12,7 @@ ENV SQLX_OFFLINE true
 # リリースモード(最適化されたバイナリ)でビルド
 RUN cargo build --release
 
+# 本番環境で動作するように環境変数を設定
+ENV APP_ENVIRONMENT production
+
 ENTRYPOINT ["./target/release/web_prod"]
