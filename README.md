@@ -23,3 +23,23 @@ cargo run
 ```sh
 cargo test
 ```
+
+---
+
+## Dockerビルド方法
+
+sqlx-data.json生成
+```
+cargo sqlx prepare -- --lib
+```
+
+
+Dockerビルド
+```
+docker build --tag web_prod --file Dockerfile .
+```
+
+Docker起動
+```
+docker run -p 8000:8000 web_prod
+```
