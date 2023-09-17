@@ -53,8 +53,7 @@ impl DatabaseSettings {
     // データベース名を含めた接続オプションを返す
     pub fn with_db(&self) -> PgConnectOptions {
         let options = self.without_db().database(&self.database_name);
-        let options = options.log_statements(tracing::log::LevelFilter::Trace);
-        options
+        options.log_statements(tracing::log::LevelFilter::Trace)
     }
 }
 
@@ -79,7 +78,7 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
             configuration_directory.join("base.yaml"),
         ))
         .add_source(config::File::from(
-            configuration_directory.join(&environment_filename),
+            configuration_directory.join(environment_filename),
         ))
         // APP_プレフィックスを付けた環境変数を設定として読み込む(これはyamlより後に追加しているので、yamlの設定より優先される)
         .add_source(
