@@ -43,3 +43,31 @@ Docker起動
 ```
 docker run -p 8000:8000 web_prod
 ```
+
+---
+
+## デプロイ
+
+- デプロイ先
+ - DigitalOcean https://www.digitalocean.com/
+ - DigitalOcean App Platform というPaaSでデプロイする
+ - お金がかかるので使わないときは停止する
+
+DigitalOceanのアカウント作成
+
+doctlインストール
+```
+brew install doctl
+```
+
+APIキー登録
+```
+doctl auth init
+```
+
+GitHub連携
+
+アプリ作成
+```
+doctl apps create --spec spec.yaml
+```

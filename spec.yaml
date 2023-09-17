@@ -1,0 +1,36 @@
+#! spec.yaml
+# DigitalOcean の App Platform 用の設定ファイル
+
+name: web-prod
+# リージョン シンガポール (見た感じ日本のリージョンはない)
+region: sgp
+
+# サービスの設定
+services:
+  # サービス名
+  - name: web-prod
+    # Dockerfileのパス (ルートディレクトリ)
+    dockerfile_path: Dockerfile
+    # ソースコードのパス
+    source_dir: .
+
+    # GitHubの設定
+    github:
+      #! ブランチ (main) だが一旦開発中のブランチにしてテスト
+      branch: continuous-deployment
+      # mainブランチにpushされたときにデプロイする
+      deploy_on_push: true
+      # ユーザー名/リポジトリ名
+      repo: itoi10/rust-web-app
+    # ヘルスチェックのエンドポイント
+    health_check:
+      http_path: /health_check
+    # アプリケーションのポート番号
+    http_port: 8000
+    # インスタンス数
+    instance_count: 1
+    # インスタンスのサイズ
+    instance_size_slug: basic-xxs
+    # 全てのリクエストを受け付ける
+    routes:
+      - path: /
