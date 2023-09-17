@@ -1,5 +1,4 @@
-use secrecy::ExposeSecret;
-use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 use std::net::TcpListener;
 use web_prod::configuration::get_configuration;
 use web_prod::startup::run;
@@ -13,13 +12,15 @@ async fn main() -> std::io::Result<()> {
 
     // 設定ファイルを読み込む
     let configuration = get_configuration().expect("Failed to read configuration.");
-    // Postgresに接続 (PgConnectionは単一のデータベース接続だが、PgPoolはコネクションプール)
-    let connection_pool =
-        PgPool::connect(configuration.database.connection_string().expose_secret())
-            .await
-            .expect("Failed to connect to Postgres.");
+    // Postgresに接続
+    let connection_pool = PgPoolOptions::new()
+        .acquire_timeout(std::time::Duration::from_secs(2)) // 接続タイムアウトを2秒に設定
+        .connect_lazy_with(configuration.database.with_db());
 
-    let address = format!("127.0.0.1:{}", configuration.application_port);
+    let address = format!(
+        "{}:{}",
+        configuration.application.host, configuration.application.port
+    );
     let listener = TcpListener::bind(address)?;
     // Actix-webサーバを非同期に移動して、awaitで待機する
     run(listener, connection_pool)?.await

@@ -1,0 +1,76 @@
+#! spec.yaml
+# DigitalOcean の App Platform 用の設定ファイル
+
+# 名前に _(アンダースコア)は使えないので - (ハイフン) を使う
+name: web-prod
+# リージョン シンガポール (見た感じ日本のリージョンはない)
+region: sgp
+
+# サービスの設定
+services:
+  # サービス名
+  - name: web-prod
+    # Dockerfileのパス (ルートディレクトリ)
+    dockerfile_path: Dockerfile
+    # ソースコードのパス
+    source_dir: .
+
+    # GitHubの設定
+    github:
+      branch: main
+      # mainブランチにpushされたときにデプロイする
+      deploy_on_push: true
+      # ユーザー名/リポジトリ名
+      repo: itoi10/rust-web-app
+    # ヘルスチェックのエンドポイント
+    health_check:
+      http_path: /health_check
+    # アプリケーションのポート番号
+    http_port: 8000
+    # インスタンス数
+    instance_count: 1
+    # インスタンスのサイズ
+    instance_size_slug: basic-xxs
+    # 全てのリクエストを受け付ける
+    routes:
+      - path: /
+
+    # 環境変数 (クラウドサービスで設定される値を参照する)
+    envs:
+      # アプリケーションのベースURL
+      - key: APP_APPLICATION__BASE_URL
+        scope: RUN_TIME
+        value: ${APP_URL}
+      # データベースに接続するためのユーザー名
+      - key: APP_DATABASE__USERNAME
+        scope: RUN_TIME
+        value: ${newsletter.USERNAME}
+      # データベースに接続するためのパスワード
+      - key: APP_DATABASE__PASSWORD
+        scope: RUN_TIME
+        value: ${newsletter.PASSWORD}
+      # データベースのホスト名
+      - key: APP_DATABASE__HOST
+        scope: RUN_TIME
+        value: ${newsletter.HOSTNAME}
+      # データベースのポート番号
+      - key: APP_DATABASE__PORT
+        scope: RUN_TIME
+        value: ${newsletter.PORT}
+      # データベース名
+      - key: APP_DATABASE__DATABASE_NAME
+        scope: RUN_TIME
+        value: ${newsletter.DATABASE}
+
+# データベースの設定
+databases:
+  # データベースエンジン Postgres
+  - engine: PG
+    # データベース名
+    name: newsletter
+    # データベースクラスターのノード数
+    num_nodes: 1
+    # インスタンスのサイズ
+    size: db-s-dev-database
+    # Postgresのバージョン
+    version: "12"

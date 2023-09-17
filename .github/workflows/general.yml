@@ -56,6 +56,10 @@ jobs:
         run: |
           sudo apt-get install libpq-dev -y
           SKIP_DOCKER=true ./scripts/init_db.sh
+      # sqlx-data.jsonが最新かチェック
+      - name: Check sqlx-data.json is up-to-date
+        run: |
+          cargo sqlx prepare --check -- --bin web_prod
       # テストを実行
       - name: Run tests
         run: cargo test
