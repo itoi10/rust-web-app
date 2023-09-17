@@ -1,6 +1,7 @@
 #! spec.yaml
 # DigitalOcean の App Platform 用の設定ファイル
 
+# 名前に _(アンダースコア)は使えないので - (ハイフン) を使う
 name: web-prod
 # リージョン シンガポール (見た感じ日本のリージョンはない)
 region: sgp
@@ -16,8 +17,7 @@ services:
 
     # GitHubの設定
     github:
-      #! ブランチ (main) だが一旦開発中のブランチにしてテスト
-      branch: continuous-deployment
+      branch: main
       # mainブランチにpushされたときにデプロイする
       deploy_on_push: true
       # ユーザー名/リポジトリ名
