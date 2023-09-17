@@ -71,3 +71,18 @@ GitHub連携
 ```
 doctl apps create --spec spec.yaml
 ```
+
+アプリにspec.yamlの更新を適用する場合
+```
+doctl apps update <アプリID> --spec=spec.yaml
+```
+
+DBマイグレート
+```
+DATABASE_URL=<DigitalOceanのDBの接続文字列> sqlx migrate run
+```
+
+アプリ削除
+```
+doctl apps delete <アプリID>
+```

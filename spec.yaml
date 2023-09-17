@@ -34,3 +34,43 @@ services:
     # 全てのリクエストを受け付ける
     routes:
       - path: /
+
+    # 環境変数 (クラウドサービスで設定される値を参照する)
+    envs:
+      # アプリケーションのベースURL
+      - key: APP_APPLICATION__BASE_URL
+        scope: RUN_TIME
+        value: ${APP_URL}
+      # データベースに接続するためのユーザー名
+      - key: APP_DATABASE__USERNAME
+        scope: RUN_TIME
+        value: ${newsletter.USERNAME}
+      # データベースに接続するためのパスワード
+      - key: APP_DATABASE__PASSWORD
+        scope: RUN_TIME
+        value: ${newsletter.PASSWORD}
+      # データベースのホスト名
+      - key: APP_DATABASE__HOST
+        scope: RUN_TIME
+        value: ${newsletter.HOSTNAME}
+      # データベースのポート番号
+      - key: APP_DATABASE__PORT
+        scope: RUN_TIME
+        value: ${newsletter.PORT}
+      # データベース名
+      - key: APP_DATABASE__DATABASE_NAME
+        scope: RUN_TIME
+        value: ${newsletter.DATABASE}
+
+# データベースの設定
+databases:
+  # データベースエンジン Postgres
+  - engine: PG
+    # データベース名
+    name: newsletter
+    # データベースクラスターのノード数
+    num_nodes: 1
+    # インスタンスのサイズ
+    size: db-s-dev-database
+    # Postgresのバージョン
+    version: "12"
