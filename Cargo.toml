@@ -35,6 +35,7 @@ tracing-actix-web = "0.7.6"
 sqlx = { version = "0.7.1", default-features = false, features = ["runtime-tokio-rustls", "macros", "postgres", "uuid", "chrono", "migrate"] }
 serde-aux = "4.2.0"
 unicode-segmentation = "1.10.1"
+claim = "0.5.0"
 
 
 [dev-dependencies]
