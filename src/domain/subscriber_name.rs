@@ -1,10 +1,5 @@
 use unicode_segmentation::UnicodeSegmentation;
 
-pub struct NewSubscriber {
-    pub email: String,
-    pub name: SubscriberName,
-}
-
 // サブスクライバーの名前を保持する構造体
 #[derive(Debug)]
 pub struct SubscriberName(String);
