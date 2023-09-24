@@ -1,3 +1,4 @@
+use crate::domain::SubscriberEmail;
 use secrecy::{ExposeSecret, Secret};
 use serde_aux::field_attributes::deserialize_number_from_string;
 use sqlx::postgres::{PgConnectOptions, PgSslMode};
@@ -11,6 +12,22 @@ pub struct Settings {
     pub database: DatabaseSettings,
     // アプリケーションの設定
     pub application: ApplicationSettings,
+    // Email送信用の設定
+    pub email_client: EmailClientSettings,
+}
+
+#[derive(serde::Deserialize)]
+pub struct EmailClientSettings {
+    // メール送信用のAPIのベースURL
+    pub base_url: String,
+    // メールの送信者として設定するアドレス
+    pub sender_email: String,
+}
+
+impl EmailClientSettings {
+    pub fn sender(&self) -> Result<SubscriberEmail, String> {
+        SubscriberEmail::parse(self.sender_email.clone())
+    }
 }
 
 #[derive(serde::Deserialize)]
