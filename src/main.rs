@@ -1,6 +1,7 @@
 use sqlx::postgres::PgPoolOptions;
 use std::net::TcpListener;
 use web_prod::configuration::get_configuration;
+use web_prod::email_client::EmailClient;
 use web_prod::startup::run;
 use web_prod::telemetry::{get_subscriber, init_subscriber};
 
@@ -17,11 +18,24 @@ async fn main() -> std::io::Result<()> {
         .acquire_timeout(std::time::Duration::from_secs(2)) // 接続タイムアウトを2秒に設定
         .connect_lazy_with(configuration.database.with_db());
 
+    // EmailClientを初期化
+    let sender_email = configuration
+        .email_client
+        .sender()
+        .expect("Invalid sender email address.");
+    let timeout = configuration.email_client.timeout();
+    let email_client = EmailClient::new(
+        configuration.email_client.base_url,
+        sender_email,
+        configuration.email_client.authorization_token,
+        timeout,
+    );
+
     let address = format!(
         "{}:{}",
         configuration.application.host, configuration.application.port
     );
     let listener = TcpListener::bind(address)?;
     // Actix-webサーバを非同期に移動して、awaitで待機する
-    run(listener, connection_pool)?.await
+    run(listener, connection_pool, email_client)?.await
 }

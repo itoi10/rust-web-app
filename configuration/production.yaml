@@ -2,3 +2,8 @@ application:
   host: 0.0.0.0
 database:
   require_ssl: true
+email_client:
+  base_url: "https://api.postmarkapp.com"
+  sender_email: "<Postmarkの送信用のURLを設定する(TODO)>"
+  # 認証キーはバージョン管理対象外とする
+  # authorization_token: ""
