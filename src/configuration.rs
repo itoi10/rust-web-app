@@ -6,7 +6,7 @@ use sqlx::ConnectOptions;
 use std::convert::{TryFrom, TryInto};
 
 // 構造体やメンバにpubを付けることで他のモジュールからもアクセスできるようになる
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Clone)]
 pub struct Settings {
     // データベースの設定
     pub database: DatabaseSettings,
@@ -16,7 +16,7 @@ pub struct Settings {
     pub email_client: EmailClientSettings,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Clone)]
 pub struct EmailClientSettings {
     // メール送信用のAPIのベースURL
     pub base_url: String,
@@ -38,7 +38,7 @@ impl EmailClientSettings {
     }
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Clone)]
 pub struct ApplicationSettings {
     // アプリケーションのポート番号 serdeのdeserialize_with属性を使って文字列から数値に変換する
     #[serde(deserialize_with = "deserialize_number_from_string")]
@@ -47,7 +47,7 @@ pub struct ApplicationSettings {
     pub host: String,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Clone)]
 pub struct DatabaseSettings {
     pub username: String,
     // Secretから値を取り出すにはexpose_secret()を使う。誤ってログに出力しないようにするため

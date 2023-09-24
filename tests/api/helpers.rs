@@ -1,10 +1,8 @@
 use once_cell::sync::Lazy;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
-use std::net::TcpListener;
 use uuid::Uuid;
 use web_prod::configuration::{get_configuration, DatabaseSettings};
-use web_prod::email_client::EmailClient;
-use web_prod::startup::run;
+use web_prod::startup::{get_connection_pool, Application};
 use web_prod::telemetry::{get_subscriber, init_subscriber};
 
 // ログ設定を一度だけ初期化する
@@ -34,41 +32,31 @@ pub async fn spawn_app() -> TestApp {
     // 最初だけログ設定を初期化する
     Lazy::force(&TRACING);
 
-    // :0を指定するとOSが空いているポートを自動的に割り当てる
-    let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind random port");
-    let port = listener.local_addr().unwrap().port();
-    let address = format!("http://127.0.0.1:{}", port);
+    // テストの際には設定をランダム化して、テスト間の独立性を確保する
+    let configuration = {
+        let mut c = get_configuration().expect("Failed to read configuration.");
+        // Use a different database for each test case
+        c.database.database_name = Uuid::new_v4().to_string();
+        // Use a random OS port
+        c.application.port = 0;
+        c
+    };
 
-    // 設定ファイルを読み込む
-    let mut configuration = get_configuration().expect("Failed to read configuration.");
+    // データベースを作成しマイグレーションを実行する
+    configure_database(&configuration.database).await;
 
-    // テスト用のデータベース名を生成
-    configuration.database.database_name = Uuid::new_v4().to_string();
+    // アプリケーション初期化
+    let application = Application::build(configuration.clone())
+        .await
+        .expect("Failed to build application.");
+    // アプリケーション起動前にアドレスを取得
+    let address = format!("http://127.0.0.1:{}", application.port());
+    // アプリケーション実行
+    let _ = tokio::spawn(application.run_until_stopped());
 
-    // データベース作成
-    let connection_pool = configure_database(&configuration.database).await;
-
-    // EmailClientを初期化
-    let sender_email = configuration
-        .email_client
-        .sender()
-        .expect("Invalid sender email address.");
-    let timeout = configuration.email_client.timeout();
-    let email_client = EmailClient::new(
-        configuration.email_client.base_url,
-        sender_email,
-        configuration.email_client.authorization_token,
-        timeout,
-    );
-
-    // HTTPサーバ起動
-    let server =
-        run(listener, connection_pool.clone(), email_client).expect("Failed to bind address");
-    let _ = tokio::spawn(server);
-    // TestApp構造体を返す
     TestApp {
         address,
-        db_pool: connection_pool,
+        db_pool: get_connection_pool(&configuration.database),
     }
 }
 
