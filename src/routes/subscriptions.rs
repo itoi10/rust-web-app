@@ -1,4 +1,5 @@
 use crate::domain::{NewSubscriber, SubscriberEmail, SubscriberName};
+use crate::email_client::EmailClient;
 use actix_web::{web, HttpResponse};
 use chrono::Utc;
 use sqlx::PgPool;
@@ -28,24 +29,45 @@ impl TryFrom<FormData> for NewSubscriber {
     // ログのトレース名
     name = "Adding a new subscriber",
     // ログから除外するフィールド
-    skip(form, pool),
+    skip(form, pool, email_client),
     // ログに追加するフィールド
     fields(
         subscriber_email = %form.email,
         subscriber_name = %form.name
     )
 )]
-pub async fn subscribe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> HttpResponse {
+pub async fn subscribe(
+    // web::FormはPOSTで送られてきたリクエストボディ
+    form: web::Form<FormData>,
+    // web::Dataはアプリケーション起動時にセットアップせれ、アプリの状態として保存されたデータ
+    pool: web::Data<PgPool>,
+    email_client: web::Data<EmailClient>,
+) -> HttpResponse {
     // フォームをパースしてNewSubscriberを取得する。パースに失敗した場合は400を返す
     let new_subscriber = match form.0.try_into() {
         Ok(subscriber) => subscriber,
         Err(_) => return HttpResponse::BadRequest().finish(),
     };
 
-    match insert_subscriber(&pool, &new_subscriber).await {
-        Ok(_) => HttpResponse::Ok().finish(),
-        Err(_) => HttpResponse::InternalServerError().finish(),
+    if insert_subscriber(&pool, &new_subscriber).await.is_err() {
+        return HttpResponse::InternalServerError().finish();
     }
+
+    // 新しい購読者にメールを送信する
+    if email_client
+        .send_email(
+            new_subscriber.email,
+            "ようこそ！",
+            "登録ありがとうございます！",
+            "登録ありがとうございます！",
+        )
+        .await
+        .is_err()
+    {
+        return HttpResponse::InternalServerError().finish();
+    }
+
+    HttpResponse::Ok().finish()
 }
 
 #[tracing::instrument(
