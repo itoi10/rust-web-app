@@ -1,4 +1,6 @@
 use crate::helpers::spawn_app;
+use wiremock::matchers::{method, path};
+use wiremock::{Mock, ResponseTemplate};
 
 // POST /subscriptions 成功時のテスト
 #[tokio::test]
@@ -72,4 +74,27 @@ async fn subscribe_returns_a_400_when_fields_are_present_but_invalid() {
             description
         );
     }
+}
+
+// 有効なデータの場合に確認メールを送信するテスト
+#[tokio::test]
+async fn subscribe_sends_a_confirmation_email_for_valid_data() {
+    // [Arrange]
+    // アプリの起動と、有効な名前とメールアドレスの用意
+    let app = spawn_app().await;
+    let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
+
+    // POSTリクエストをモックサーバに送信する準備
+    Mock::given(path("/email"))
+        .and(method("POST"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(1)
+        .mount(&app.email_server)
+        .await;
+
+    // [Act]
+    app.post_subscriptions(body.into()).await; // intoは &str -> String
+
+    // [Assert]
+    // Mock::givenで設定したリクエストの検証される
 }
