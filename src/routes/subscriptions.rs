@@ -53,13 +53,15 @@ pub async fn subscribe(
         return HttpResponse::InternalServerError().finish();
     }
 
+    let confirmation_link = "https://my-api.com/subscriptions/confirm";
+
     // 新しい購読者にメールを送信する
     if email_client
         .send_email(
             new_subscriber.email,
             "ようこそ！",
-            "登録ありがとうございます！",
-            "登録ありがとうございます！",
+            &format!("登録ありがとうございます！<br /><a href=\"{}\">こちら</a>のリンクで購読を確定してください。",confirmation_link),
+            &format!("登録ありがとうございます！こちらのリンクで購読を確定してください：{}",confirmation_link),
         )
         .await
         .is_err()
