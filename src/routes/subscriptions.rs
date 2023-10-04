@@ -53,16 +53,7 @@ pub async fn subscribe(
         return HttpResponse::InternalServerError().finish();
     }
 
-    let confirmation_link = "https://my-api.com/subscriptions/confirm";
-
-    // 新しい購読者にメールを送信する
-    if email_client
-        .send_email(
-            new_subscriber.email,
-            "ようこそ！",
-            &format!("登録ありがとうございます！<br /><a href=\"{}\">こちら</a>のリンクで購読を確定してください。",confirmation_link),
-            &format!("登録ありがとうございます！こちらのリンクで購読を確定してください：{}",confirmation_link),
-        )
+    if send_confirmation_email(&email_client, new_subscriber)
         .await
         .is_err()
     {
@@ -70,6 +61,26 @@ pub async fn subscribe(
     }
 
     HttpResponse::Ok().finish()
+}
+
+#[tracing::instrument(
+    name = "Send a confirmation email to a new subscriber",
+    skip(email_client, new_subscriber)
+)]
+pub async fn send_confirmation_email(
+    email_client: &EmailClient,
+    new_subscriber: NewSubscriber,
+) -> Result<(), reqwest::Error> {
+    let confirmation_link = "https://my-api.com/subscriptions/confirm";
+    let plain_body = format!(
+        "登録ありがとうございます！こちらのリンクで購読を確定してください：{}",
+        confirmation_link
+    );
+    let html_body = format!("登録ありがとうございます！<br /><a href=\"{}\">こちら</a>のリンクで購読を確定してください。",confirmation_link);
+    // 新しい購読者にメールを送信する
+    email_client
+        .send_email(new_subscriber.email, "ようこそ！", &html_body, &plain_body)
+        .await
 }
 
 #[tracing::instrument(
