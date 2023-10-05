@@ -61,5 +61,7 @@ export DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@localhost:${DB_PORT}/${
 # sqlx CLIツールを使用してデータベースを作成
 sqlx database create
 sqlx migrate run
+# クエリファイルを生成
+sqlx prepare -- --lib
 
 >&2 echo "Postgres has been migrated, ready to go!"
